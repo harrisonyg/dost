@@ -1,0 +1,407 @@
+{
+    "Parameters": {
+        "env": {
+            "Type": "String",
+            "Default": "NONE"
+        },
+        "AuthCognitoUserPoolId": {
+            "Type": "String"
+        },
+        "AppSyncApiName": {
+            "Type": "String",
+            "Default": "AppSyncSimpleTransform"
+        },
+        "DynamoDBModelTableReadIOPS": {
+            "Type": "Number",
+            "Default": 5,
+            "Description": "The number of read IOPS the table should support."
+        },
+        "DynamoDBModelTableWriteIOPS": {
+            "Type": "Number",
+            "Default": 5,
+            "Description": "The number of write IOPS the table should support."
+        },
+        "DynamoDBBillingMode": {
+            "Type": "String",
+            "Default": "PAY_PER_REQUEST",
+            "AllowedValues": [
+                "PAY_PER_REQUEST",
+                "PROVISIONED"
+            ],
+            "Description": "Configure @model types to create DynamoDB tables with PAY_PER_REQUEST or PROVISIONED billing modes."
+        },
+        "DynamoDBEnablePointInTimeRecovery": {
+            "Type": "String",
+            "Default": "false",
+            "AllowedValues": [
+                "true",
+                "false"
+            ],
+            "Description": "Whether to enable Point in Time Recovery on the table."
+        },
+        "DynamoDBEnableServerSideEncryption": {
+            "Type": "String",
+            "Default": "true",
+            "AllowedValues": [
+                "true",
+                "false"
+            ],
+            "Description": "Enable server side encryption powered by KMS."
+        },
+        "S3DeploymentBucket": {
+            "Type": "String",
+            "Description": "An S3 Bucket name where assets are deployed"
+        },
+        "S3DeploymentRootKey": {
+            "Type": "String",
+            "Description": "An S3 key relative to the S3DeploymentBucket that points to the root of the deployment directory."
+        }
+    },
+    "Resources": {
+        "GraphQLAPI": {
+            "Type": "AWS::AppSync::GraphQLApi",
+            "Properties": {
+                "AuthenticationType": "AMAZON_COGNITO_USER_POOLS",
+                "Name": {
+                    "Fn::Join": [
+                        "",
+                        [
+                            {
+                                "Ref": "AppSyncApiName"
+                            },
+                            "-",
+                            {
+                                "Ref": "env"
+                            }
+                        ]
+                    ]
+                },
+                "UserPoolConfig": {
+                    "AwsRegion": {
+                        "Ref": "AWS::Region"
+                    },
+                    "DefaultAction": "ALLOW",
+                    "UserPoolId": {
+                        "Ref": "AuthCognitoUserPoolId"
+                    }
+                }
+            }
+        },
+        "GraphQLAPITransformerSchema3CB2AE18": {
+            "Type": "AWS::AppSync::GraphQLSchema",
+            "Properties": {
+                "ApiId": {
+                    "Fn::GetAtt": [
+                        "GraphQLAPI",
+                        "ApiId"
+                    ]
+                },
+                "DefinitionS3Location": {
+                    "Fn::Join": [
+                        "",
+                        [
+                            "s3://",
+                            {
+                                "Ref": "S3DeploymentBucket"
+                            },
+                            "/",
+                            {
+                                "Ref": "S3DeploymentRootKey"
+                            },
+                            "/schema.graphql"
+                        ]
+                    ]
+                }
+            }
+        },
+        "GraphQLAPINONEDS95A13CF0": {
+            "Type": "AWS::AppSync::DataSource",
+            "Properties": {
+                "ApiId": {
+                    "Fn::GetAtt": [
+                        "GraphQLAPI",
+                        "ApiId"
+                    ]
+                },
+                "Name": "NONE_DS",
+                "Type": "NONE",
+                "Description": "None Data Source for Pipeline functions"
+            }
+        },
+        "MsgCode": {
+            "Type": "AWS::CloudFormation::Stack",
+            "Properties": {
+                "TemplateURL": {
+                    "Fn::Join": [
+                        "",
+                        [
+                            "https://s3.",
+                            {
+                                "Ref": "AWS::Region"
+                            },
+                            ".",
+                            {
+                                "Ref": "AWS::URLSuffix"
+                            },
+                            "/",
+                            {
+                                "Ref": "S3DeploymentBucket"
+                            },
+                            "/",
+                            {
+                                "Ref": "S3DeploymentRootKey"
+                            },
+                            "/stacks/MsgCode.json"
+                        ]
+                    ]
+                },
+                "Parameters": {
+                    "DynamoDBModelTableReadIOPS": {
+                        "Ref": "DynamoDBModelTableReadIOPS"
+                    },
+                    "DynamoDBModelTableWriteIOPS": {
+                        "Ref": "DynamoDBModelTableWriteIOPS"
+                    },
+                    "DynamoDBBillingMode": {
+                        "Ref": "DynamoDBBillingMode"
+                    },
+                    "DynamoDBEnablePointInTimeRecovery": {
+                        "Ref": "DynamoDBEnablePointInTimeRecovery"
+                    },
+                    "DynamoDBEnableServerSideEncryption": {
+                        "Ref": "DynamoDBEnableServerSideEncryption"
+                    },
+                    "referencetotransformerrootstackenv10C5A902Ref": {
+                        "Ref": "env"
+                    },
+                    "referencetotransformerrootstackGraphQLAPI20497F53ApiId": {
+                        "Fn::GetAtt": [
+                            "GraphQLAPI",
+                            "ApiId"
+                        ]
+                    },
+                    "referencetotransformerrootstackGraphQLAPINONEDS2BA9D1C8Name": {
+                        "Fn::GetAtt": [
+                            "GraphQLAPINONEDS95A13CF0",
+                            "Name"
+                        ]
+                    },
+                    "referencetotransformerrootstackS3DeploymentBucket7592718ARef": {
+                        "Ref": "S3DeploymentBucket"
+                    },
+                    "referencetotransformerrootstackS3DeploymentRootKeyA71EA735Ref": {
+                        "Ref": "S3DeploymentRootKey"
+                    }
+                }
+            },
+            "DependsOn": [
+                "GraphQLAPITransformerSchema3CB2AE18"
+            ]
+        },
+        "MsgAi": {
+            "Type": "AWS::CloudFormation::Stack",
+            "Properties": {
+                "TemplateURL": {
+                    "Fn::Join": [
+                        "",
+                        [
+                            "https://s3.",
+                            {
+                                "Ref": "AWS::Region"
+                            },
+                            ".",
+                            {
+                                "Ref": "AWS::URLSuffix"
+                            },
+                            "/",
+                            {
+                                "Ref": "S3DeploymentBucket"
+                            },
+                            "/",
+                            {
+                                "Ref": "S3DeploymentRootKey"
+                            },
+                            "/stacks/MsgAi.json"
+                        ]
+                    ]
+                },
+                "Parameters": {
+                    "DynamoDBModelTableReadIOPS": {
+                        "Ref": "DynamoDBModelTableReadIOPS"
+                    },
+                    "DynamoDBModelTableWriteIOPS": {
+                        "Ref": "DynamoDBModelTableWriteIOPS"
+                    },
+                    "DynamoDBBillingMode": {
+                        "Ref": "DynamoDBBillingMode"
+                    },
+                    "DynamoDBEnablePointInTimeRecovery": {
+                        "Ref": "DynamoDBEnablePointInTimeRecovery"
+                    },
+                    "DynamoDBEnableServerSideEncryption": {
+                        "Ref": "DynamoDBEnableServerSideEncryption"
+                    },
+                    "referencetotransformerrootstackenv10C5A902Ref": {
+                        "Ref": "env"
+                    },
+                    "referencetotransformerrootstackGraphQLAPI20497F53ApiId": {
+                        "Fn::GetAtt": [
+                            "GraphQLAPI",
+                            "ApiId"
+                        ]
+                    },
+                    "referencetotransformerrootstackS3DeploymentBucket7592718ARef": {
+                        "Ref": "S3DeploymentBucket"
+                    },
+                    "referencetotransformerrootstackS3DeploymentRootKeyA71EA735Ref": {
+                        "Ref": "S3DeploymentRootKey"
+                    },
+                    "referencetotransformerrootstackMsgCodeNestedStackMsgCodeNestedStackResource1BE3A513OutputstransformerrootstackMsgCodeQuerygetMsgCodeauth0FunctionQuerygetMsgCodeauth0FunctionAppSyncFunctionE7491884FunctionId": {
+                        "Fn::GetAtt": [
+                            "MsgCode",
+                            "Outputs.transformerrootstackMsgCodeQuerygetMsgCodeauth0FunctionQuerygetMsgCodeauth0FunctionAppSyncFunctionE7491884FunctionId"
+                        ]
+                    },
+                    "referencetotransformerrootstackMsgCodeNestedStackMsgCodeNestedStackResource1BE3A513OutputstransformerrootstackMsgCodeQuerygetMsgCodepostAuth0FunctionQuerygetMsgCodepostAuth0FunctionAppSyncFunction3C5DE21CFunctionId": {
+                        "Fn::GetAtt": [
+                            "MsgCode",
+                            "Outputs.transformerrootstackMsgCodeQuerygetMsgCodepostAuth0FunctionQuerygetMsgCodepostAuth0FunctionAppSyncFunction3C5DE21CFunctionId"
+                        ]
+                    },
+                    "referencetotransformerrootstackMsgCodeNestedStackMsgCodeNestedStackResource1BE3A513OutputstransformerrootstackMsgCodeMutationcreateMsgCodeinit0FunctionMutationcreateMsgCodeinit0FunctionAppSyncFunctionD02BC3ECFunctionId": {
+                        "Fn::GetAtt": [
+                            "MsgCode",
+                            "Outputs.transformerrootstackMsgCodeMutationcreateMsgCodeinit0FunctionMutationcreateMsgCodeinit0FunctionAppSyncFunctionD02BC3ECFunctionId"
+                        ]
+                    },
+                    "referencetotransformerrootstackMsgCodeNestedStackMsgCodeNestedStackResource1BE3A513OutputstransformerrootstackMsgCodeMutationcreateMsgCodeauth0FunctionMutationcreateMsgCodeauth0FunctionAppSyncFunctionBD91523EFunctionId": {
+                        "Fn::GetAtt": [
+                            "MsgCode",
+                            "Outputs.transformerrootstackMsgCodeMutationcreateMsgCodeauth0FunctionMutationcreateMsgCodeauth0FunctionAppSyncFunctionBD91523EFunctionId"
+                        ]
+                    },
+                    "referencetotransformerrootstackMsgCodeNestedStackMsgCodeNestedStackResource1BE3A513OutputstransformerrootstackMsgCodeMutationupdateMsgCodeinit0FunctionMutationupdateMsgCodeinit0FunctionAppSyncFunction64C6EBC7FunctionId": {
+                        "Fn::GetAtt": [
+                            "MsgCode",
+                            "Outputs.transformerrootstackMsgCodeMutationupdateMsgCodeinit0FunctionMutationupdateMsgCodeinit0FunctionAppSyncFunction64C6EBC7FunctionId"
+                        ]
+                    },
+                    "referencetotransformerrootstackMsgCodeNestedStackMsgCodeNestedStackResource1BE3A513OutputstransformerrootstackMsgCodeSubscriptiononCreateMsgCodeauth0FunctionSubscriptiononCreateMsgCodeauth0FunctionAppSyncFunction2815E119FunctionId": {
+                        "Fn::GetAtt": [
+                            "MsgCode",
+                            "Outputs.transformerrootstackMsgCodeSubscriptiononCreateMsgCodeauth0FunctionSubscriptiononCreateMsgCodeauth0FunctionAppSyncFunction2815E119FunctionId"
+                        ]
+                    },
+                    "referencetotransformerrootstackMsgCodeNestedStackMsgCodeNestedStackResource1BE3A513OutputstransformerrootstackMsgCodeSubscriptionOnCreateMsgCodeDataResolverFnSubscriptionOnCreateMsgCodeDataResolverFnAppSyncFunction79B45337FunctionId": {
+                        "Fn::GetAtt": [
+                            "MsgCode",
+                            "Outputs.transformerrootstackMsgCodeSubscriptionOnCreateMsgCodeDataResolverFnSubscriptionOnCreateMsgCodeDataResolverFnAppSyncFunction79B45337FunctionId"
+                        ]
+                    },
+                    "referencetotransformerrootstackMsgCodeNestedStackMsgCodeNestedStackResource1BE3A513OutputstransformerrootstackMsgCodeMsgCodeOwnerDataResolverFnMsgCodeOwnerDataResolverFnAppSyncFunctionEC533FF6FunctionId": {
+                        "Fn::GetAtt": [
+                            "MsgCode",
+                            "Outputs.transformerrootstackMsgCodeMsgCodeOwnerDataResolverFnMsgCodeOwnerDataResolverFnAppSyncFunctionEC533FF6FunctionId"
+                        ]
+                    }
+                }
+            },
+            "DependsOn": [
+                "GraphQLAPITransformerSchema3CB2AE18"
+            ]
+        },
+        "CustomResourcesjson": {
+            "Type": "AWS::CloudFormation::Stack",
+            "Properties": {
+                "Parameters": {
+                    "AppSyncApiId": {
+                        "Fn::GetAtt": [
+                            "GraphQLAPI",
+                            "ApiId"
+                        ]
+                    },
+                    "AppSyncApiName": {
+                        "Ref": "AppSyncApiName"
+                    },
+                    "env": {
+                        "Ref": "env"
+                    },
+                    "S3DeploymentBucket": {
+                        "Ref": "S3DeploymentBucket"
+                    },
+                    "S3DeploymentRootKey": {
+                        "Ref": "S3DeploymentRootKey"
+                    }
+                },
+                "TemplateURL": {
+                    "Fn::Join": [
+                        "/",
+                        [
+                            "https://s3.amazonaws.com",
+                            {
+                                "Ref": "S3DeploymentBucket"
+                            },
+                            {
+                                "Ref": "S3DeploymentRootKey"
+                            },
+                            "stacks",
+                            "CustomResources.json"
+                        ]
+                    ]
+                }
+            },
+            "DependsOn": [
+                "GraphQLAPI",
+                "GraphQLAPITransformerSchema3CB2AE18",
+                "MsgCode",
+                "MsgAi"
+            ]
+        }
+    },
+    "Outputs": {
+        "GraphQLAPIIdOutput": {
+            "Description": "Your GraphQL API ID.",
+            "Value": {
+                "Fn::GetAtt": [
+                    "GraphQLAPI",
+                    "ApiId"
+                ]
+            },
+            "Export": {
+                "Name": {
+                    "Fn::Join": [
+                        ":",
+                        [
+                            {
+                                "Ref": "AWS::StackName"
+                            },
+                            "GraphQLApiId"
+                        ]
+                    ]
+                }
+            }
+        },
+        "GraphQLAPIEndpointOutput": {
+            "Description": "Your GraphQL API endpoint.",
+            "Value": {
+                "Fn::GetAtt": [
+                    "GraphQLAPI",
+                    "GraphQLUrl"
+                ]
+            },
+            "Export": {
+                "Name": {
+                    "Fn::Join": [
+                        ":",
+                        [
+                            {
+                                "Ref": "AWS::StackName"
+                            },
+                            "GraphQLApiEndpoint"
+                        ]
+                    ]
+                }
+            }
+        }
+    }
+}

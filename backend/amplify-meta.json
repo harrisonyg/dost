@@ -1,0 +1,90 @@
+{
+  "providers": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-dostv34-dev-80734-authRole",
+      "UnauthRoleArn": "arn:aws:iam::354508834331:role/amplify-dostv34-dev-80734-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::354508834331:role/amplify-dostv34-dev-80734-authRole",
+      "Region": "us-east-2",
+      "DeploymentBucketName": "amplify-dostv34-dev-80734-deployment",
+      "UnauthRoleName": "amplify-dostv34-dev-80734-unauthRole",
+      "StackName": "amplify-dostv34-dev-80734",
+      "StackId": "arn:aws:cloudformation:us-east-2:354508834331:stack/amplify-dostv34-dev-80734/edb25560-0cb7-11ee-9634-02cd09a0a305",
+      "AmplifyAppId": "d2atjogcco957o"
+    }
+  },
+  "auth": {
+    "dostv34ee7bea4c": {
+      "service": "Cognito",
+      "providerPlugin": "awscloudformation",
+      "dependsOn": [],
+      "customAuth": false,
+      "frontendAuthConfig": {
+        "socialProviders": [],
+        "usernameAttributes": [],
+        "signupAttributes": [
+          "EMAIL"
+        ],
+        "passwordProtectionSettings": {
+          "passwordPolicyMinLength": 8,
+          "passwordPolicyCharacters": []
+        },
+        "mfaConfiguration": "OFF",
+        "mfaTypes": [
+          "SMS"
+        ],
+        "verificationMechanisms": [
+          "EMAIL"
+        ]
+      },
+      "providerMetadata": {
+        "s3TemplateURL": "https://s3.amazonaws.com/amplify-dostv34-dev-80734-deployment/amplify-cfn-templates/auth/dostv34ee7bea4c-cloudformation-template.json",
+        "logicalId": "authdostv34ee7bea4c"
+      },
+      "lastPushTimeStamp": "2023-06-18T18:44:40.466Z",
+      "output": {
+        "UserPoolId": "us-east-2_wUKCYfFxi",
+        "AppClientIDWeb": "4vrpbrb16k3prifp6l78ad71cd",
+        "AppClientID": "3jb4qfqgv49g28vg5un6a0918b",
+        "IdentityPoolId": "us-east-2:58e635de-9ad4-4c0c-b147-108f5e26dbfc",
+        "UserPoolArn": "arn:aws:cognito-idp:us-east-2:354508834331:userpool/us-east-2_wUKCYfFxi",
+        "IdentityPoolName": "dostv34ee7bea4c_identitypool_ee7bea4c__dev",
+        "UserPoolName": "dostv34ee7bea4c_userpool_ee7bea4c"
+      },
+      "lastPushDirHash": "D7DKD57y5heu0y7bovhoZO+JoeI="
+    }
+  },
+  "api": {
+    "dostv34": {
+      "service": "AppSync",
+      "providerPlugin": "awscloudformation",
+      "dependsOn": [
+        {
+          "attributes": [
+            "UserPoolId"
+          ],
+          "category": "auth",
+          "resourceName": "dostv34ee7bea4c"
+        }
+      ],
+      "output": {
+        "authConfig": {
+          "defaultAuthentication": {
+            "authenticationType": "AMAZON_COGNITO_USER_POOLS",
+            "userPoolConfig": {
+              "userPoolId": "authdostv34ee7bea4c"
+            }
+          },
+          "additionalAuthenticationProviders": []
+        },
+        "GraphQLAPIIdOutput": "uucxke6dmbcrxeyfk2o6mv7cam",
+        "GraphQLAPIEndpointOutput": "https://j3sjaomtorhtxex5cqzbnnet4a.appsync-api.us-east-2.amazonaws.com/graphql"
+      },
+      "providerMetadata": {
+        "s3TemplateURL": "https://s3.amazonaws.com/amplify-dostv34-dev-80734-deployment/amplify-cfn-templates/api/cloudformation-template.json",
+        "logicalId": "apidostv34"
+      },
+      "lastPushTimeStamp": "2023-06-26T09:10:49.089Z",
+      "lastPushDirHash": "H3zNjKe3EnWnXe8WfiIZdUt+hP0="
+    }
+  }
+}

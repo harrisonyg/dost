@@ -1,0 +1,13 @@
+{
+    "AppSyncApiName": "dostv34",
+    "DynamoDBBillingMode": "PAY_PER_REQUEST",
+    "DynamoDBEnableServerSideEncryption": false,
+    "AuthCognitoUserPoolId": {
+        "Fn::GetAtt": [
+            "authdostv34ee7bea4c",
+            "Outputs.UserPoolId"
+        ]
+    },
+    "S3DeploymentBucket": "amplify-dostv34-dev-80734-deployment",
+    "S3DeploymentRootKey": "amplify-appsync-files/e142157e522bc311ade100d3f28dc21317b8870f"
+}
